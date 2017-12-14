@@ -14,6 +14,7 @@ Usage:
     python words.py data/<srt-file-name> > <out-file-name>
 """
 
+import argparse
 from collections import Counter
 import os
 import string
@@ -25,7 +26,7 @@ import srt
 FREQUENCY_FILE = 'en_full.txt'
 
 
-def main(filename):
+def main(args):
 
     # get frequency words count
     document_frequency = {}
@@ -39,7 +40,7 @@ def main(filename):
 
     # count of words in subtitles file
     counter = Counter()
-    with open(filename) as f:
+    with open(args.input) as f:
         subtitles = srt.parse(f.read())
         for s in subtitles:
             content = s.content.translate(
@@ -52,13 +53,30 @@ def main(filename):
         tfidf.update({w: counter[w] / document_frequency.get(w, 1)})
 
     # output to stdout
-    for w in tfidf.most_common():
-        print("{} {}".format(w[0], counter[w[0]]))
+    # tfidf
+    if args.sort == 't':
+        for w in tfidf.most_common():
+            print("{} {}".format(w[0], counter[w[0]]))
+    # count
+    else:
+        for w in counter.most_common():
+            print("{} {}".format(w[0], counter[w[0]]))
 
 
 if __name__ == '__main__':
+
     if len(sys.argv) < 2:
         print("Specify subtitles file")
         sys.exit()
-    filename = sys.argv[1]
-    main(filename)
+
+    parser = argparse.ArgumentParser(
+        description='Sort words form subtitles files based on TFIDF or count.')
+    parser.add_argument(
+        '-s', '--sort',
+        help='specify sort based on tfidf (t) or count (c)',
+        default='t',
+        choices=['t', 'tfidf', 'c', 'count'])
+    parser.add_argument(
+        '-i', '--input', help='input file name', required=True)
+    args = parser.parse_args()
+    main(args)
