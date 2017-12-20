@@ -28,7 +28,7 @@ FREQUENCY_FILE = 'en_full.txt'
 WORD_TEMPLATE = """
 ## {word}
     {sentence}
-[Google Translate](https://translate.google.com/#en/ru/{sentence_encoded})
+[Google Translate](https://translate.google.com/#en/ru/{sentence_encoded}) |
 [Wordnik](http://wordnik.com/words/{word})
 """
 
