@@ -20,10 +20,23 @@ import os
 import string
 import sys
 
-import srt
-
 
 FREQUENCY_FILE = 'en_full.txt'
+
+
+WORD_TEMPLATE = """<details>
+<summary>{word}</summary>
+    <p>{sentence}</p>
+    <p style="font-size:75%">
+        <a href="https://translate.google.com/#en/ru/{word}">Google Translate</a>
+        <a href="http://wordnik.com/words/{word}">Wordnik</a>
+    </p>
+</details>
+"""
+
+
+def get_word_str(word, sentence):
+    return WORD_TEMPLATE.format(word=word, sentence=sentence)
 
 
 def main(args):
@@ -41,9 +54,8 @@ def main(args):
     # count of words in subtitles file
     counter = Counter()
     with open(args.input) as f:
-        subtitles = srt.parse(f.read())
-        for s in subtitles:
-            content = s.content.translate(
+        for line in f:
+            content = line.translate(
                 str.maketrans(string.punctuation, ' ' * len(string.punctuation))).translate(
                 str.maketrans('0123456789', ' ' * 10)).lower()
             counter.update(content.split())
@@ -56,7 +68,7 @@ def main(args):
     # tfidf
     if args.sort == 't':
         for w in tfidf.most_common():
-            print("{} {}".format(w[0], counter[w[0]]))
+            print(get_word_str(w[0], 'test test'))
     # count
     else:
         for w in counter.most_common():
