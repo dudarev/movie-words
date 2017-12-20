@@ -19,24 +19,28 @@ from collections import Counter
 import os
 import string
 import sys
+from urllib.parse import quote
 
 
 FREQUENCY_FILE = 'en_full.txt'
 
 
-WORD_TEMPLATE = """<details>
-<summary>{word}</summary>
-    <p>{sentence}</p>
-    <p style="font-size:75%">
-        <a href="https://translate.google.com/#en/ru/{word}">Google Translate</a>
-        <a href="http://wordnik.com/words/{word}">Wordnik</a>
-    </p>
-</details>
+WORD_TEMPLATE = """
+## {word}
+    {sentence}
+[Google Translate](https://translate.google.com/#en/ru/{sentence_encoded})
+[Wordnik](http://wordnik.com/words/{word})
 """
 
 
-def get_word_str(word, sentence):
-    return WORD_TEMPLATE.format(word=word, sentence=sentence)
+def get_word_str(word, sentence, sentence_encoded):
+    return WORD_TEMPLATE.format(word=word, sentence=sentence, sentence_encoded=sentence_encoded)
+
+
+def strip_punctuation(line):
+    return line.translate(
+        str.maketrans(string.punctuation, ' ' * len(string.punctuation))).translate(
+        str.maketrans('0123456789', ' ' * 10))
 
 
 def main(args):
@@ -50,6 +54,21 @@ def main(args):
         for line in f:
             w, count = line.split()
             document_frequency[w] = int(count)
+    
+    # get words example
+    examples = {}
+    with open(args.input) as f:
+        example = ''
+        for line in f:
+            if not line.strip():
+                if example:
+                    for w in strip_punctuation(example).split():
+                        if len(examples.get(w.lower(), '')) < len(example.strip()):
+                            examples[w.lower()] = example.strip().replace('\n', ' ')
+                example = ''
+            line_no_punctuation = strip_punctuation(line).strip()
+            if line_no_punctuation:
+                example += line
 
     # count of words in subtitles file
     counter = Counter()
@@ -68,7 +87,7 @@ def main(args):
     # tfidf
     if args.sort == 't':
         for w in tfidf.most_common():
-            print(get_word_str(w[0], 'test test'))
+            print(get_word_str(w[0], examples[w[0]], quote(examples[w[0]])))
     # count
     else:
         for w in counter.most_common():
